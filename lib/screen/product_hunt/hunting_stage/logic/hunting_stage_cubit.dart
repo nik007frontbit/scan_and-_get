@@ -19,6 +19,7 @@ import 'hunting_stage_repository.dart';
 
 part 'hunting_stage_state.dart';
 
+//test
 // class HuntingStageCubit extends Cubit<HuntingStageState> {
 //   HuntingStageCubit() : super(HuntingStageInitialState());
 //   bool isBox = true;
