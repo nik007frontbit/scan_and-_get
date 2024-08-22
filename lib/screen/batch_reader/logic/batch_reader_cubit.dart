@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
-import 'package:cunning_document_scanner/cunning_document_scanner.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_exif_rotation/flutter_exif_rotation.dart';
@@ -17,6 +16,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../src/core/utils/custom_exception.dart';
 import '../../../src/core/utils/loading_view.dart';
+import '../../../src/core/utils/permissions/camara_permission.dart';
+import '../model/batch_reader_thread_entity.dart';
+import '../model/medicine_verification_pending_model.dart';
 
 part 'batch_reader_state.dart';
 
@@ -28,6 +30,42 @@ class BatchReaderCubit extends Cubit<BatchReaderState> {
   String searchedMedicineName = "";
   int? searchedMedicineId;
   TextEditingController medicineSearchController = TextEditingController();
+  List<MedicineVerificationPendingModel> batchVerificationPending = [
+    MedicineVerificationPendingModel(
+      image: "",
+      medicineId: "12345",
+      medicineName: "Ubitoc",
+      batchId: "UL23G409",
+    ),
+    MedicineVerificationPendingModel(
+      image: "",
+      medicineId: "123456",
+      medicineName: "NormoFlora Bv",
+      batchId: "UL23G409",
+    ),
+    MedicineVerificationPendingModel(
+      image: "",
+      medicineId: "123457",
+      medicineName: "clebanif10",
+      batchId: "UL23G409",
+    ),
+    MedicineVerificationPendingModel(
+      image: "",
+      medicineId: "123457333",
+      medicineName: "clebanif10",
+      batchId: "UL23G409",
+    ), MedicineVerificationPendingModel(
+      image: "",
+      medicineId: "12345733322",
+      medicineName: "clebanif10",
+      batchId: "UL23G409",
+    ), MedicineVerificationPendingModel(
+      image: "",
+      medicineId: "12345222227",
+      medicineName: "clebanif10",
+      batchId: "UL23G409",
+    ),
+  ];
 
   checkDrugValue() async {
     // showDialog(
@@ -105,22 +143,25 @@ class BatchReaderCubit extends Cubit<BatchReaderState> {
     if (await Permission.camera.isGranted == false) {
       await requestCamaraPermissions();
     }
+    final ImagePicker picker = ImagePicker();
+    var picked = await picker.pickImage(source: ImageSource.camera);
     // Show loader while requesting permissions
-    var picked = await CunningDocumentScanner.getPictures(
-      noOfPages: 1,
-    ).onError((error, stackTrace) {
-      throw Exception("Image is Not Selected... $error");
-    });
-    if (picked!.isNotEmpty && picked.first != null) {
+    // var picked = await CunningDocumentScanner.getPictures(
+    //   noOfPages: 1,
+    // ).onError((error, stackTrace) {
+    //   throw Exception("Image is Not Selected... $error");
+    // });
+    // if (picked!.isNotEmpty && picked.first != null) {
+    if (picked != null && picked.path != "") {
       File rotateImage =
-          await FlutterExifRotation.rotateImage(path: picked.first);
+          await FlutterExifRotation.rotateImage(path: picked.path);
 
       await readTextFromImage(imagePath: rotateImage.path, context: context);
-
-      // selectedImages.addAll(picked);
     }
-
-    emit(BatchReaderSuccessState());
+    // selectedImages.addAll(picked);
+    // }
+    //
+    // emit(BatchReaderSuccessState());
   }
 
   Future<void> readTextFromImage(
@@ -305,21 +346,49 @@ class BatchReaderCubit extends Cubit<BatchReaderState> {
 //       }
   }
 
-  Future<void> requestCamaraPermissions() async {
-    var cameraStatus = await Permission.camera.status;
+  batchVerificationImageSend(
+      MedicineVerificationPendingModel medicineVerificationPendingModel) async {
+    print("object is find 1111111");
+    var map = {
+      'image': await MultipartFile.fromFile(
+          medicineVerificationPendingModel.image,
+          filename:
+              path_package.basename(medicineVerificationPendingModel.image)),
+      "medicine_id": medicineVerificationPendingModel.medicineId,
+      "batch": medicineVerificationPendingModel.batchId,
+      'product_category': isDrug ? "drug" : "fmcg",
+      "purchase_id": "6565",
+      "chemist_id": "11",
+    };
+    emit(BatchReaderSuccessState());
+    try {
+      BatchReaderThreadEntity? batchReaderModelData =
+          await batchReaderRepository.sendBatchProductThread(map);
+      print("object is find 2");
+      batchVerificationPending.map(
+        (e) {
+          print("Acceess this 1");
+          print(
+              "Acceess this 1${batchReaderModelData!.data!.medicineId}==${e.medicineId}");
+          print(
+              "Acceess this 1${batchReaderModelData!.data!.batch}==${e.batchId}");
+          print(
+              "Acceess this 1${batchReaderModelData!.data!.medicineId == e.medicineId && e.batchId == batchReaderModelData.data!.batch}");
 
-    switch (cameraStatus) {
-      case PermissionStatus.granted:
-        // Permission is already granted, proceed with your logic
-        break;
-      case PermissionStatus.denied:
-        // Permission is denied, request it again
-        await Permission.camera.request();
-        //await requestCamaraPermissions(); // Recursive call
-        break;
-      default:
-        await openAppSettings();
-        break;
+          if (batchReaderModelData!.data!.medicineId.toString() == e.medicineId.toString() &&
+              e.batchId.toString() == batchReaderModelData.data!.batch.toString()) {
+            print("Acceess this ");
+            e.isVerified = true;
+          }
+        },
+      ).toList();
+      emit(BatchReaderSuccessState());
+      // batchReaderModelData!.statusCode==1
+    } on CustomException catch (e) {
+      // hideLoadingView(context);
+      if (!isClosed) {
+        emit(BatchReaderErrorState(error: e.cause));
+      }
     }
   }
 }

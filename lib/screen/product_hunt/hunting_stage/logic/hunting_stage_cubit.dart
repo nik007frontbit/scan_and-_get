@@ -19,7 +19,8 @@ import 'hunting_stage_repository.dart';
 
 part 'hunting_stage_state.dart';
 
-//test
+//test main
+
 // class HuntingStageCubit extends Cubit<HuntingStageState> {
 //   HuntingStageCubit() : super(HuntingStageInitialState());
 //   bool isBox = true;
@@ -484,11 +485,11 @@ class HuntingStageCubit extends Cubit<HuntingStageState> {
               .historyAddAndRefresh(map['medicine_name']);
           Navigator.pop(context);
 
-          final cacheDir = await getTemporaryDirectory();
-
-          if (cacheDir.existsSync()) {
-            cacheDir.deleteSync(recursive: true);
-          }
+          // final cacheDir = await getTemporaryDirectory();
+          //
+          // if (cacheDir.existsSync()) {
+          //   cacheDir.deleteSync(recursive: true);
+          // }
 
           // for (var list in huntList) {
           //   for (var side in list['sides']) {

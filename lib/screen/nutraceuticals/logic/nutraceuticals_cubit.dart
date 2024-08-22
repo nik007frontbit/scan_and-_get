@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
@@ -11,23 +10,67 @@ import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path_package;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:scan_and_get_images/screen/nutraceuticals/logic/nutraceuticals_repository.dart';
 import 'package:scan_and_get_images/src/core/model/nutraceuticals_model.dart';
 import 'package:scan_and_get_images/src/core/utils/loading_view.dart';
 import 'package:scan_and_get_images/src/core/utils/show_logs.dart';
 import 'package:scan_and_get_images/src/core/utils/snackbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../src/core/utils/custom_exception.dart';
+import '../../batch_reader/model/address_search_model_entity.dart';
+import '../../batch_reader/model/medicine_search_entity.dart';
+import '../../product_hunt/hunting_stage/model/message_response_model.dart';
+
 part 'nutraceuticals_state.dart';
 
 class NutraceuticalsCubit extends Cubit<NutraceuticalsState> {
   NutraceuticalsCubit() : super(NutraceuticalsInitialState());
   List<String> selectedImages = [];
+  List selectedImagesWithName = [];
+  String? medicineId;
+  TextEditingController medicineSearchController = TextEditingController();
+  TextEditingController nameController = TextEditingController();
+  final List<String> medicineTypes = ["drug", "fmcg", "nutraceutical"];
+
+  // Track the selected medicine type
+  String? selectedMedicineType;
+  String? selectedDosageType;
+
+  medicineSearchSelect(AddressSearchModelDataResult addressSearchModel) {
+    emit(NutraceuticalsSuccessState());
+    nameController.text = addressSearchModel.medicineName;
+    medicineSearchController.text = addressSearchModel.medicineName;
+    selectedMedicineType = addressSearchModel.medicineType;
+    medicineId = addressSearchModel.medicineId.toString();
+    emit(NutraceuticalsSuccessState());
+  }
+
+  medicineSearchSelectBarcode(
+      MedicineSearchDataMedicinesResult addressSearchModel) {
+    emit(NutraceuticalsSuccessState());
+    nameController.text = addressSearchModel.medicineName!;
+    medicineSearchController.text = addressSearchModel.medicineName!;
+    selectedMedicineType = addressSearchModel.medicineType;
+    medicineId = addressSearchModel.medicineId.toString();
+    emit(NutraceuticalsSuccessState());
+  }
+
+  medicineSearchCancel() {
+    emit(NutraceuticalsLoadingState());
+    selectedImages = [];
+    nameController.text = "";
+    medicineSearchController.text = "";
+    selectedMedicineType = null;
+    medicineId = null;
+    emit(NutraceuticalsSuccessState());
+  }
 
   initLocalList() async {
     // Obtain shared preferences.
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    selectedImages = prefs.getStringList('selectedImages') ?? [];
-    emit(NutraceuticalsSuccessState());
+    // final SharedPreferences prefs = await SharedPreferences.getInstance();
+    // selectedImages = prefs.getStringList('selectedImages') ?? [];
+    // emit(NutraceuticalsSuccessState());
   }
 
   deleteImageFromList({
@@ -125,7 +168,7 @@ class NutraceuticalsCubit extends Cubit<NutraceuticalsState> {
     // if (isMedicine) {
     //   if (context.mounted) {
     //     text =
-        await dioPostRequest(path: imagePath, context: context);
+    await dioPostRequest(path: imagePath, context: context);
     //   }
     // } else {
     //   showSnackBar(
@@ -138,93 +181,134 @@ class NutraceuticalsCubit extends Cubit<NutraceuticalsState> {
 
   NutraceuticalModel? nutraceuticalModel;
 
-  Future<String> dioPostRequest(
+  Future<void> dioPostRequest(
       {required String path, required BuildContext context}) async {
     showLogs(path);
-    showLoadingView(context);
     try {
-      // currntly working
-      // var formData = FormData.fromMap({
-      //   'image': await MultipartFile.fromFile(path, filename: ''),
-      // });
-      var formData = FormData.fromMap({
+      showLoadingView(context);
+      MessageResponseModel messageResponseModel =
+          await NutraceuticalsRepository().submitImage({
+        "medicine_id": medicineId,
         'image': await MultipartFile.fromFile(path,
             filename: path_package.basename(path)),
         'accesskey': "704df5854e6011ef9a5dd49390325d4e",
       });
-      var dio = Dio();
+      if (messageResponseModel.statusCode == 1) {
+        showSnackBar(
+          context,
+          messageResponseModel.message,
+        );
 
-      var response = await dio.request(
-        'https://pythondev.evitalrx.in:3050/other/get_table_of_content',
-        options: Options(
-          method: 'POST',
-        ),
-        data: formData,
-      );
-
-      hideLoadingView(context);
-
-      if (response.statusCode == 200) {
-        nutraceuticalModel =
-            nutraceuticalModelFromJson(json.encode(response.data));
-
-        if (nutraceuticalModel!.statusCode == 1) {
-          showSnackBar(
-            context,
-            nutraceuticalModel!.statusMessage,
-          );
-
-          selectedImages.add(path);
-          // Obtain shared preferences.
-          final SharedPreferences prefs = await SharedPreferences.getInstance();
-
-          prefs.setStringList('selectedImages', selectedImages);
-          emit(NutraceuticalsSuccessState());
-          // showDialog(
-          //   context: context,
-          //   builder: (context) {
-          //     return AlertBox(
-          //         message: nutraceuticalModel!.data.toString().replaceAll(
-          //               "],",
-          //               "],\n\n",
-          //             ));
-          //   },
-          // );
-          // Process the extracted text as required (e.g., display in a dialog).
-          return nutraceuticalModel!.statusMessage;
-        } else {
-          showSnackBar(
-            context,
-            response.data["status_message"] ?? "Something went wrong",
-            isWarning: true,
-          );
-
-          showLogs(response.data);
-          return response.data["status_message"] ?? "Something went wrong";
-        }
-
-        // return(json.encode(response.data));
-        return response.toString();
+        // selectedImages.add(path);
+        selectedImagesWithName
+            .add({'image': path, "name": nameController.text});
+        // // Obtain shared preferences.
+        // final SharedPreferences prefs = await SharedPreferences.getInstance();
+        //
+        // prefs.setStringList('selectedImages', selectedImages);
+        emit(NutraceuticalsSuccessState());
+      } else if (messageResponseModel.statusCode == 0) {
+        showSnackBar(context, messageResponseModel.message, isWarning: true);
       } else {
         showSnackBar(
           context,
-          response.statusMessage ?? "Something went wrong",
-          isWarning: true,
+          messageResponseModel.message,
+          isError: true,
         );
-        showLogs(response.statusMessage.toString());
-
-        return response.statusMessage ?? "Something went wrong";
       }
-    } on DioException catch (e) {
       hideLoadingView(context);
-      showLogs(e.toString());
-      showSnackBar(
-        context,
-        e.message ?? "Something went wrong",
-        isError: true,
-      );
-      return e.toString();
+      emit(NutraceuticalsSuccessState());
+    } on CustomException catch (e) {
+      hideLoadingView(context);
+      if (!isClosed) {
+        emit(NutraceuticalsErrorState(error: e.cause));
+      }
     }
+    // showLoadingView(context);
+    // try {
+    //   // currntly working
+    //   // var formData = FormData.fromMap({
+    //   //   'image': await MultipartFile.fromFile(path, filename: ''),
+    //   // });
+    //   var formData = FormData.fromMap({
+    //     "medicine_id": medicineId,
+    //     'image': await MultipartFile.fromFile(path,
+    //         filename: path_package.basename(path)),
+    //     'accesskey': "704df5854e6011ef9a5dd49390325d4e",
+    //   });
+    //   var dio = Dio();
+    //
+    //   var response = await dio.request(
+    //     'https://pythondev.evitalrx.in:3050/other/get_table_of_content',
+    //     options: Options(
+    //       method: 'POST',
+    //     ),
+    //     data: formData,
+    //   );
+    //
+    //   hideLoadingView(context);
+    //
+    //   if (response.statusCode == 200) {
+    //     nutraceuticalModel =
+    //         nutraceuticalModelFromJson(json.encode(response.data));
+    //
+    //     if (nutraceuticalModel!.statusCode == 1) {
+    //       showSnackBar(
+    //         context,
+    //         nutraceuticalModel!.statusMessage,
+    //       );
+    //
+    //       selectedImages.add(path);
+    //       // Obtain shared preferences.
+    //       final SharedPreferences prefs = await SharedPreferences.getInstance();
+    //
+    //       prefs.setStringList('selectedImages', selectedImages);
+    //       emit(NutraceuticalsSuccessState());
+    //       // showDialog(
+    //       //   context: context,
+    //       //   builder: (context) {
+    //       //     return AlertBox(
+    //       //         message: nutraceuticalModel!.data.toString().replaceAll(
+    //       //               "],",
+    //       //               "],\n\n",
+    //       //             ));
+    //       //   },
+    //       // );
+    //       // Process the extracted text as required (e.g., display in a dialog).
+    //       return nutraceuticalModel!.statusMessage;
+    //     } else {
+    //       showSnackBar(
+    //         context,
+    //         response.data["status_message"] ?? "Something went wrong",
+    //         isWarning: true,
+    //       );
+    //
+    //       showLogs(response.data);
+    //       return response.data["status_message"] ?? "Something went wrong";
+    //     }
+    //
+    //     // return(json.encode(response.data));
+    //     return response.toString();
+    //   } else {
+    //     showSnackBar(
+    //       context,
+    //       response.statusMessage ?? "Something went wrong",
+    //       isWarning: true,
+    //     );
+    //     showLogs(response.statusMessage.toString());
+    //
+    //     return response.statusMessage ?? "Something went wrong";
+    //   }
+    // } on DioException catch (e) {
+    //   hideLoadingView(context);
+    //   showLogs(e.toString());
+    //   showSnackBar(
+    //     context,
+    //     e.message ?? "Something went wrong",
+    //     isError: true,
+    //   );
+    //   return e.toString();
+    // }
   }
 
   Future<void> requestCamaraPermissions() async {

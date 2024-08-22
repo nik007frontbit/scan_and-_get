@@ -10,7 +10,7 @@ class HttpService {
   // static const baseEvitalUrl = "https://dev.evital.in/v3/rest/";
 
   //live url
-  static const baseUrl = "https://ceb5-182-70-125-130.ngrok-free.app/";
+  static const baseUrl = "https://38f3-182-70-125-130.ngrok-free.app/";
 
   // static const baseEvitalUrl = "https://evital.in/v3/rest/";
 

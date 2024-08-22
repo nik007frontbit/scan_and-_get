@@ -4,20 +4,21 @@ import 'package:scan_and_get_images/src/core/utils/shared_preference/pref_key.da
 import 'package:scan_and_get_images/src/core/utils/shared_preference/shared_pref.dart';
 
 import '../../../batch_reader/model/address_search_model_entity.dart';
+import '../../../batch_reader/model/medicine_search_entity.dart';
 
 part 'product_hunt_form_state.dart';
 
 class ProductHuntFormCubit extends Cubit<ProductHuntFormState> {
   ProductHuntFormCubit() : super(ProductHuntFormInitial());
   TextEditingController medicineSearchController = TextEditingController();
-  int? medicineId;
+  String? medicineId;
   AddressSearchModelDataResult? addressSearchModelDataResult;
   TextEditingController nameController = TextEditingController();
 
   // TextEditingController mrpController = TextEditingController();
 
 // Define a list of medicine types
-  final List<String> medicineTypes = ["drug", "fmcg", "nutraceutical"];
+  final List<String> medicineTypes = ["drug", "fmcg", "nutraceutical","other"];
   final List<String> dosageTypes = [
     "tablet",
     "capsule",
@@ -37,7 +38,21 @@ class ProductHuntFormCubit extends Cubit<ProductHuntFormState> {
     nameController.text = addressSearchModel.medicineName;
     medicineSearchController.text = addressSearchModel.medicineName;
     selectedMedicineType = addressSearchModel.medicineType;
-    medicineId = addressSearchModel.medicineId;
+    medicineId = addressSearchModel.medicineId.toString();
+    emit(ProductHuntFormSuccessState());
+  }
+
+  medicineSearchSelectBarcode(
+      MedicineSearchDataMedicinesResult addressSearchModel) {
+    emit(ProductHuntFormLoadingState());
+    nameController.text = addressSearchModel.medicineName!;
+    medicineSearchController.text = addressSearchModel.medicineName!;
+    if (medicineTypes.contains(addressSearchModel.medicineType.toString())) {
+      selectedMedicineType = addressSearchModel.medicineType.toString();
+    }else{
+      selectedMedicineType = "other";
+    }
+    medicineId = addressSearchModel.medicineId.toString();
     emit(ProductHuntFormSuccessState());
   }
 
