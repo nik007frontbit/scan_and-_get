@@ -3,30 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:scan_and_get_images/screen/nutraceuticals/logic/nutraceuticals_cubit.dart';
 import 'package:scan_and_get_images/src/core/component/dialog/alert_box.dart';
-import 'package:scan_and_get_images/src/core/component/dialog/barcodeSearchDialoug.dart';
 import 'package:scan_and_get_images/src/core/component/image_block/selected_image_block.dart';
-import 'package:scan_and_get_images/src/core/utils/snackbar.dart';
 
+import '../../src/core/component/dialog/barcodeSearchDialoug.dart';
 import '../../src/core/component/text_field_view.dart';
+import '../../src/core/utils/snackbar.dart';
 import '../batch_reader/logic/medicine_search_repository.dart';
 import '../batch_reader/model/address_search_model_entity.dart';
+import 'logic/nutritional_cubit.dart';
 
-class NutraceuticalScreen extends StatefulWidget {
-  const NutraceuticalScreen({super.key});
+class NutritionalScreen extends StatefulWidget {
+  const NutritionalScreen({super.key});
 
   @override
-  State<NutraceuticalScreen> createState() => _NutraceuticalScreenState();
+  State<NutritionalScreen> createState() => _NutritionalScreenState();
 }
 
-class _NutraceuticalScreenState extends State<NutraceuticalScreen> {
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
-
+class _NutritionalScreenState extends State<NutritionalScreen> {
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -35,16 +29,16 @@ class _NutraceuticalScreenState extends State<NutraceuticalScreen> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    return BlocConsumer<NutraceuticalsCubit, NutraceuticalsState>(
+    return BlocConsumer<NutritionalCubit, NutritionalState>(
       listener: (context, state) {
         // TODO: implement listener
-        if (state is NutraceuticalsErrorState) {
+        print("here");
+        if (state is NutritionalErrorState) {
           showSnackBar(context, state.error, isError: true);
         }
       },
       builder: (context, state) {
-        NutraceuticalsCubit cubit =
-            BlocProvider.of<NutraceuticalsCubit>(context);
+        NutritionalCubit cubit = BlocProvider.of<NutritionalCubit>(context);
         return Scaffold(
           appBar: AppBar(
             backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -61,29 +55,28 @@ class _NutraceuticalScreenState extends State<NutraceuticalScreen> {
                         //   fontWeight: FontWeight.w600,
                         // ),
                         decoration: InputDecoration(
-                          prefix: Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Icon(Icons.search),
-                          ),
-                          hintText: "Search for Medicine",
-                          // hintStyle: TextStyles.customFont(
-                          //     color: Colors.black26,
-                          //     fontWeight: FontWeight.w600,
-                          //     fontSize: 16),
-                          border: InputBorder.none,
-                          suffixIcon: IconButton(
-                            onPressed: () => barcodeSearchDialog(
-                              context: context,
-                              onSuccess: (detailsList) {
-                                if (detailsList.isNotEmpty) {
-                                  cubit.medicineSearchSelectBarcode(
-                                      detailsList.first);
-                                }
-                              },
+                            suffixIcon: IconButton(
+                              onPressed: () => barcodeSearchDialog(
+                                context: context,
+                                onSuccess: (detailsList) {
+                                  if (detailsList.isNotEmpty) {
+                                    cubit.medicineSearchSelectBarcode(
+                                        detailsList.first);
+                                  }
+                                },
+                              ),
+                              icon: Icon(Icons.barcode_reader),
                             ),
-                            icon: Icon(Icons.barcode_reader),
-                          ),
-                        ),
+                            prefix: Padding(
+                              padding: EdgeInsets.all(8.0),
+                              child: Icon(Icons.search),
+                            ),
+                            hintText: "Search for Medicine",
+                            // hintStyle: TextStyles.customFont(
+                            //     color: Colors.black26,
+                            //     fontWeight: FontWeight.w600,
+                            //     fontSize: 16),
+                            border: InputBorder.none),
                       );
                     }),
                     onSelected: (pattern) {},
@@ -113,12 +106,6 @@ class _NutraceuticalScreenState extends State<NutraceuticalScreen> {
                       if (pattern.length >= 3) {
                         var map = {
                           "medicine_name": pattern.toString(),
-                          "chemist_id": "48935",
-                          "accesstoken": "UPAF5ZohkN9Jj2Bg",
-                          "device_id": "9b0ada0e-9af4-4afa-b7b6-06f0101f9b7f",
-                          // "app_version": "1",
-                          // "os": "android",
-                          "apikey": "R08mGEm4550Bi69AHobdH9E4QY02f1N7"
                         };
 
                         return await MedicineSearchRepository()
@@ -128,7 +115,7 @@ class _NutraceuticalScreenState extends State<NutraceuticalScreen> {
                       }
                     })
                 : const Text(
-                    "Nutraceutical Product",
+                    "Nutritional Product",
                   ),
             actions: [
               cubit.medicineId != null

@@ -10,7 +10,6 @@ import 'package:flutter/widgets.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart' as path_package;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:scan_and_get_images/screen/nutraceuticals/logic/nutraceuticals_repository.dart';
 import 'package:scan_and_get_images/src/core/model/nutraceuticals_model.dart';
 import 'package:scan_and_get_images/src/core/utils/loading_view.dart';
 import 'package:scan_and_get_images/src/core/utils/show_logs.dart';
@@ -21,11 +20,12 @@ import '../../../src/core/utils/custom_exception.dart';
 import '../../batch_reader/model/address_search_model_entity.dart';
 import '../../batch_reader/model/medicine_search_entity.dart';
 import '../../product_hunt/hunting_stage/model/message_response_model.dart';
+import 'nutritional_repository.dart';
 
-part 'nutraceuticals_state.dart';
+part 'nutritional_state.dart';
 
-class NutraceuticalsCubit extends Cubit<NutraceuticalsState> {
-  NutraceuticalsCubit() : super(NutraceuticalsInitialState());
+class NutritionalCubit extends Cubit<NutritionalState> {
+  NutritionalCubit() : super(NutritionalInitialState());
   List<String> selectedImages = [];
   List selectedImagesWithName = [];
   String? medicineId;
@@ -38,39 +38,38 @@ class NutraceuticalsCubit extends Cubit<NutraceuticalsState> {
   String? selectedDosageType;
 
   medicineSearchSelect(AddressSearchModelDataResult addressSearchModel) {
-    emit(NutraceuticalsSuccessState());
+    emit(NutritionalSuccessState());
     nameController.text = addressSearchModel.medicineName;
     medicineSearchController.text = addressSearchModel.medicineName;
     selectedMedicineType = addressSearchModel.medicineType;
     medicineId = addressSearchModel.medicineId.toString();
-    emit(NutraceuticalsSuccessState());
+    emit(NutritionalSuccessState());
   }
 
-  medicineSearchSelectBarcode(
-      MedicineSearchDataMedicinesResult addressSearchModel) {
-    emit(NutraceuticalsSuccessState());
+  medicineSearchSelectBarcode(MedicineSearchDataMedicinesResult addressSearchModel) {
+    emit(NutritionalSuccessState());
     nameController.text = addressSearchModel.medicineName!;
     medicineSearchController.text = addressSearchModel.medicineName!;
     selectedMedicineType = addressSearchModel.medicineType;
     medicineId = addressSearchModel.medicineId.toString();
-    emit(NutraceuticalsSuccessState());
+    emit(NutritionalSuccessState());
   }
 
   medicineSearchCancel() {
-    emit(NutraceuticalsLoadingState());
+    emit(NutritionalLoadingState());
     selectedImages = [];
     nameController.text = "";
     medicineSearchController.text = "";
     selectedMedicineType = null;
     medicineId = null;
-    emit(NutraceuticalsSuccessState());
+    emit(NutritionalSuccessState());
   }
 
   initLocalList() async {
     // Obtain shared preferences.
     // final SharedPreferences prefs = await SharedPreferences.getInstance();
     // selectedImages = prefs.getStringList('selectedImages') ?? [];
-    // emit(NutraceuticalsSuccessState());
+    // emit(NutritionalSuccessState());
   }
 
   deleteImageFromList({
@@ -83,7 +82,7 @@ class NutraceuticalsCubit extends Cubit<NutraceuticalsState> {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
 
     prefs.setStringList('selectedImages', selectedImages);
-    emit(NutraceuticalsSuccessState());
+    emit(NutritionalSuccessState());
   }
 
   addImageFromGallery({required BuildContext context}) async {
@@ -98,7 +97,7 @@ class NutraceuticalsCubit extends Cubit<NutraceuticalsState> {
         await readTextFromImage(imagePath: picked.path, context: context);
       }
     }
-    emit(NutraceuticalsSuccessState());
+    emit(NutritionalSuccessState());
   }
 
   addImageFromCamara({required BuildContext context}) async {
@@ -117,7 +116,7 @@ class NutraceuticalsCubit extends Cubit<NutraceuticalsState> {
       // selectedImages.addAll(picked);
     }
 
-    emit(NutraceuticalsSuccessState());
+    emit(NutritionalSuccessState());
   }
 
   Future<void> readTextFromImage(
@@ -187,7 +186,7 @@ class NutraceuticalsCubit extends Cubit<NutraceuticalsState> {
     try {
       showLoadingView(context);
       MessageResponseModel messageResponseModel =
-          await NutraceuticalsRepository().submitImage({
+          await NutritionalRepository().submitImage({
         "medicine_id": medicineId,
         'image': await MultipartFile.fromFile(path,
             filename: path_package.basename(path)),
@@ -206,7 +205,7 @@ class NutraceuticalsCubit extends Cubit<NutraceuticalsState> {
         // final SharedPreferences prefs = await SharedPreferences.getInstance();
         //
         // prefs.setStringList('selectedImages', selectedImages);
-        emit(NutraceuticalsSuccessState());
+        emit(NutritionalSuccessState());
       } else if (messageResponseModel.statusCode == 0) {
         showSnackBar(context, messageResponseModel.message, isWarning: true);
       } else {
@@ -217,11 +216,11 @@ class NutraceuticalsCubit extends Cubit<NutraceuticalsState> {
         );
       }
       hideLoadingView(context);
-      emit(NutraceuticalsSuccessState());
+      emit(NutritionalSuccessState());
     } on CustomException catch (e) {
       hideLoadingView(context);
       if (!isClosed) {
-        emit(NutraceuticalsErrorState(error: e.cause));
+        emit(NutritionalErrorState(error: e.cause));
       }
     }
     // showLoadingView(context);
@@ -263,7 +262,7 @@ class NutraceuticalsCubit extends Cubit<NutraceuticalsState> {
     //       final SharedPreferences prefs = await SharedPreferences.getInstance();
     //
     //       prefs.setStringList('selectedImages', selectedImages);
-    //       emit(NutraceuticalsSuccessState());
+    //       emit(NutritionalSuccessState());
     //       // showDialog(
     //       //   context: context,
     //       //   builder: (context) {

@@ -6,6 +6,8 @@
 import 'package:flutter/material.dart' show debugPrint;
 import 'package:scan_and_get_images/screen/batch_reader/model/address_search_model_entity.dart';
 import 'package:scan_and_get_images/screen/batch_reader/model/batch_reader_model_entity.dart';
+import 'package:scan_and_get_images/screen/batch_reader/model/batch_reader_thread_entity.dart';
+import 'package:scan_and_get_images/screen/batch_reader/model/medicine_search_entity.dart';
 
 JsonConvert jsonConvert = JsonConvert();
 
@@ -163,6 +165,31 @@ class JsonConvert {
       return data.map<BatchReaderModelData>((Map<String, dynamic> e) =>
           BatchReaderModelData.fromJson(e)).toList() as M;
     }
+    if (<BatchReaderThreadEntity>[] is M) {
+      return data.map<BatchReaderThreadEntity>((Map<String, dynamic> e) =>
+          BatchReaderThreadEntity.fromJson(e)).toList() as M;
+    }
+    if (<BatchReaderThreadData>[] is M) {
+      return data.map<BatchReaderThreadData>((Map<String, dynamic> e) =>
+          BatchReaderThreadData.fromJson(e)).toList() as M;
+    }
+    if (<MedicineSearchEntity>[] is M) {
+      return data.map<MedicineSearchEntity>((Map<String, dynamic> e) =>
+          MedicineSearchEntity.fromJson(e)).toList() as M;
+    }
+    if (<MedicineSearchData>[] is M) {
+      return data.map<MedicineSearchData>((Map<String, dynamic> e) =>
+          MedicineSearchData.fromJson(e)).toList() as M;
+    }
+    if (<MedicineSearchDataMedicines>[] is M) {
+      return data.map<MedicineSearchDataMedicines>((Map<String, dynamic> e) =>
+          MedicineSearchDataMedicines.fromJson(e)).toList() as M;
+    }
+    if (<MedicineSearchDataMedicinesResult>[] is M) {
+      return data.map<MedicineSearchDataMedicinesResult>((
+          Map<String, dynamic> e) =>
+          MedicineSearchDataMedicinesResult.fromJson(e)).toList() as M;
+    }
 
     debugPrint("$M not found");
 
@@ -190,6 +217,14 @@ class JsonConvertClassCollection {
         .fromJson,
     (BatchReaderModelEntity).toString(): BatchReaderModelEntity.fromJson,
     (BatchReaderModelData).toString(): BatchReaderModelData.fromJson,
+    (BatchReaderThreadEntity).toString(): BatchReaderThreadEntity.fromJson,
+    (BatchReaderThreadData).toString(): BatchReaderThreadData.fromJson,
+    (MedicineSearchEntity).toString(): MedicineSearchEntity.fromJson,
+    (MedicineSearchData).toString(): MedicineSearchData.fromJson,
+    (MedicineSearchDataMedicines).toString(): MedicineSearchDataMedicines
+        .fromJson,
+    (MedicineSearchDataMedicinesResult)
+        .toString(): MedicineSearchDataMedicinesResult.fromJson,
   };
 
   bool containsKey(String type) {

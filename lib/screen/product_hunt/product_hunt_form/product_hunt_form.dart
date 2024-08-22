@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:scan_and_get_images/screen/product_hunt/product_hunt_form/logic/product_hunt_form_cubit.dart';
 import 'package:scan_and_get_images/src/core/component/dropdown_button_view.dart';
 import 'package:scan_and_get_images/src/core/component/text_field_view.dart';
 
+import '../../../src/core/component/dialog/barcodeSearchDialoug.dart';
 import '../../batch_reader/logic/medicine_search_repository.dart';
 import '../../batch_reader/model/address_search_model_entity.dart';
 import '../hunting_stage/hunting_stage.dart';
@@ -40,7 +40,19 @@ class ProductHunt extends StatelessWidget {
                       // style: TextStyles.customFont(
                       //   fontWeight: FontWeight.w600,
                       // ),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
+                          suffixIcon: IconButton(
+                            onPressed: () => barcodeSearchDialog(
+                              context: context,
+                              onSuccess: (detailsList) {
+                                if (detailsList.isNotEmpty) {
+                                  cubit.medicineSearchSelectBarcode(
+                                      detailsList.first);
+                                }
+                              },
+                            ),
+                            icon: Icon(Icons.barcode_reader),
+                          ),
                           prefix: Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Icon(Icons.search),
@@ -81,7 +93,7 @@ class ProductHunt extends StatelessWidget {
                       var map = {
                         "medicine_name": pattern.toString(),
                         "chemist_id": "48935",
-                        "accesstoken": "m3mlvtfikwz3xbo9",
+                        "accesstoken": "UPAF5ZohkN9Jj2Bg",
                         "device_id": "9b0ada0e-9af4-4afa-b7b6-06f0101f9b7f",
                         // "app_version": "1",
                         // "os": "android",
@@ -135,11 +147,6 @@ class ProductHunt extends StatelessWidget {
                         // ),
                         ElevatedButton(
                             onPressed: () async {
-                              final cacheDir = await getTemporaryDirectory();
-
-                              if (cacheDir.existsSync()) {
-                                cacheDir.deleteSync(recursive: true);
-                              }
                               // BlocProvider.of<HuntingStageCubit>(context)
                               //     .resetState();
                               Navigator.push(
