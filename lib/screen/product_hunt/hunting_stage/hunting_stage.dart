@@ -1043,10 +1043,10 @@ class HuntingStageScreen extends StatelessWidget {
   @override
   Future<void> clear() async {
     clear();
-    final cacheDir = await getTemporaryDirectory();
-
-    if (cacheDir.existsSync()) {
-      cacheDir.deleteSync(recursive: true);
-    }
+    // final cacheDir = await getTemporaryDirectory();
+    //
+    // if (cacheDir.existsSync()) {
+    //   cacheDir.deleteSync(recursive: true);
+    // }
   }
 }

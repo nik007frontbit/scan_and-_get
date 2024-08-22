@@ -21,13 +21,16 @@ class SelectedImageBlock extends StatelessWidget {
       ),
       child: Column(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            child: Image.file(
-              File(imagePath),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.file(
+                File(imagePath),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-          Center(child: Text(batch!=""?batch:"xxxxx"))
+          Text(batch)
         ],
       ),
     );

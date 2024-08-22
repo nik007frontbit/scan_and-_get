@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,10 +9,17 @@ import 'package:scan_and_get_images/screen/batch_reader/logic/batch_reader_cubit
 import 'package:scan_and_get_images/src/core/utils/snackbar.dart';
 
 import '../../src/core/component/dialog/alert_box.dart';
+import '../../src/core/component/dialog/image_upload_dialog.dart';
+import 'model/medicine_verification_pending_model.dart';
 
-class BatchReaderScreen extends StatelessWidget {
+class BatchReaderScreen extends StatefulWidget {
   BatchReaderScreen({super.key});
 
+  @override
+  State<BatchReaderScreen> createState() => _BatchReaderScreenState();
+}
+
+class _BatchReaderScreenState extends State<BatchReaderScreen> {
   List<String> selectedImages = [];
 
   @override
@@ -35,7 +44,7 @@ class BatchReaderScreen extends StatelessWidget {
         return Scaffold(
             appBar: AppBar(
               backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-              title: Text("Batch reader"),
+              title: const Text("Batch reader"),
             ),
             body: SingleChildScrollView(
               child: Column(
@@ -43,8 +52,8 @@ class BatchReaderScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Container(
-                    margin: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
                         color: Colors.white,
@@ -85,6 +94,58 @@ class BatchReaderScreen extends StatelessWidget {
                           ],
                         )
                       ],
+                    ),
+                  ),
+                  const ListTile(
+                    title: Text("Unverified Batch"),
+                  ),
+                  Column(
+                    children: List.generate(
+                      cubit.batchVerificationPending.length,
+                      (index) {
+                        MedicineVerificationPendingModel
+                            medicineVerificationPendingModel =
+                            cubit.batchVerificationPending[index];
+                        return ListTile(
+                          title: Text(
+                            medicineVerificationPendingModel.medicineName,
+                          ),
+                          subtitle: Text(
+                            "Batch No : ${medicineVerificationPendingModel.batchId}",
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              medicineVerificationPendingModel.image != ""
+                                  ? Image.file(File(
+                                      medicineVerificationPendingModel.image))
+                                  : IconButton(
+                                      onPressed: () {
+                                        imageUploadDialog(
+                                          context: context,
+                                          onImageSelect: (
+                                              {required context,
+                                              required imagePath}) {
+                                            medicineVerificationPendingModel
+                                                .image = imagePath;
+                                            // setState(() {});
+                                            cubit.batchVerificationImageSend(
+                                                medicineVerificationPendingModel);
+                                          },
+                                        );
+                                      },
+                                      icon: Icon(Icons.upload)),
+                              Icon(
+                                Icons.check_circle,
+                                color:
+                                    medicineVerificationPendingModel.isVerified
+                                        ? Colors.green
+                                        : Colors.grey,
+                              )
+                            ],
+                          ),
+                        );
+                      },
                     ),
                   ),
                   Wrap(

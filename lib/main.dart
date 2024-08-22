@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:scan_and_get_images/screen/batch_reader/batch_reader.dart';
 import 'package:scan_and_get_images/screen/batch_reader/logic/batch_reader_cubit.dart';
-import 'package:scan_and_get_images/screen/product_hunt/hunting_stage/logic/hunting_stage_cubit.dart';
+import 'package:scan_and_get_images/screen/nutraceuticals/logic/nutraceuticals_cubit.dart';
+import 'package:scan_and_get_images/screen/nutraceuticals/nutraceuticals.dart';
+import 'package:scan_and_get_images/screen/nutritional/logic/nutritional_cubit.dart';
+import 'package:scan_and_get_images/screen/nutritional/nutritional.dart';
 import 'package:scan_and_get_images/screen/product_hunt/product_hunt_form/logic/product_hunt_form_cubit.dart';
 import 'package:scan_and_get_images/screen/product_hunt/product_hunt_form/product_hunt_form.dart';
 
-void main() {
+Future<void> main() async {
   runApp(const MyApp());
 }
 
@@ -26,6 +30,12 @@ class MyApp extends StatelessWidget {
         // ),
         BlocProvider(
           create: (context) => BatchReaderCubit()..checkDrugValue(),
+        ),
+        BlocProvider(
+          create: (context) => NutraceuticalsCubit()..initLocalList(),
+        ),
+        BlocProvider(
+          create: (context) => NutritionalCubit()..initLocalList(),
         ),
       ],
       child: MaterialApp(
@@ -78,6 +88,21 @@ class _MyHomePageState extends State<MyHomePage> {
   int currentIndex = 0;
 
   @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    clearCatch();
+  }
+
+  clearCatch() async {
+    final cacheDir = await getTemporaryDirectory();
+
+    if (cacheDir.existsSync()) {
+      cacheDir.deleteSync(recursive: true);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
@@ -86,19 +111,28 @@ class _MyHomePageState extends State<MyHomePage> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-      body:
-          // currentIndex == 0
-          //     ? const NutraceuticalScreen()
-          //     :
-          currentIndex == 0 ? BatchReaderScreen() : ProductHunt(),
+      body: currentIndex == 0
+          ? const NutraceuticalScreen()
+          : currentIndex == 1
+              ? const NutritionalScreen()
+              : currentIndex == 2
+                  ? BatchReaderScreen()
+                  : ProductHunt(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: currentIndex,
+        selectedItemColor: Colors.deepPurple,
+        unselectedItemColor: Colors.deepPurple,
         items: const [
-          // BottomNavigationBarItem(
-          //     icon: Icon(
-          //       Icons.image_search_sharp,
-          //     ),
-          //     label: "Nutraceutical"),
+          BottomNavigationBarItem(
+              icon: Icon(
+                Icons.image_search_sharp,
+              ),
+              label: "Nutraceutical"),
+          BottomNavigationBarItem(
+              icon: Icon(
+                Icons.propane_tank_rounded,
+              ),
+              label: "Nutritional"),
           BottomNavigationBarItem(
               icon: Icon(
                 Icons.document_scanner_outlined,
